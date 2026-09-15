@@ -10,3 +10,4 @@ langchain
 langchain-ollama
 langchain_tavily 
 langchain_community
+secure-smtplib
