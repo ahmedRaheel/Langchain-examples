@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+sqlalchemy[asyncio]
+asyncpg
+pgvector
+python-multipart
+pypdf
+langchain-core
+langchain
+langchain-ollama
+langchain_tavily 
+langchain_community
