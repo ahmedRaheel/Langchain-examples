@@ -1,0 +1,5 @@
+Python is a programming language used to give instructions to computers. Its simple, readable syntax makes it a great choice for beginners.
+
+You can use Python to build websites, create games, analyze data, and develop artificial intelligence applications.
+
+Think of a Python program as a recipe: each instruction tells the computer what to do next. For example, this program displays a greeting:

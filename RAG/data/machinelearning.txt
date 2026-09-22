@@ -1,0 +1,7 @@
+Machine learning is a type of artificial intelligence that helps computers learn patterns from data instead of being given a rule for every situation.
+
+For example, we can show a computer many emails labeled “spam” or “not spam.” It learns patterns that help it identify spam in new emails.
+
+Machine learning is used to recommend videos, recognize speech, predict house prices, and detect unusual bank transactions.
+
+Think of it like practicing maths: learning from examples helps you solve new problems. However, a machine’s predictions can be wrong, especially when its training data is incomplete or biased.

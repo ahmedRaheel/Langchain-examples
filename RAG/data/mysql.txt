@@ -1,0 +1,5 @@
+MySQL is a database management system used to store, organize, and retrieve information. It keeps data in tables made of rows and columns, similar to a spreadsheet.
+
+For example, a school could use MySQL to store students’ names, classes, and marks.
+
+You interact with MySQL using SQL, a language for working with databases. This command retrieves all students from a table named students:
