@@ -1,4 +1,4 @@
-from tools import get_current_time
+from tools_manager import  execute_tool
 from openai import OpenAI as _OpenAI
 
 OLLAMA_MODEL = "qwen2.5:0.5b"
@@ -18,20 +18,24 @@ messages =  [{"role": "system", "content": "You are friend AI Assistent with cus
 while True:
     user_input = input("You\n")
 
-    if not user_input:
-        continue;
    
 
     if user_input in {"quit", "exit"}:
         print("Bye!, have a nice day")
         break;
+    
+    if not user_input:
+            continue;
+       
 
     messages.append({"role":"user", "content":user_input})
 
-    if "time"  in user_input:
-            print("Assistant:\n")
-            print(get_current_time())
-            continue
+    result = execute_tool(user_input)
+    if result is not None:
+        print ("AI:\n")
+        print(result)
+        continue
+            
     response = client.chat.completions.create(model= OLLAMA_MODEL, 
                                               temperature=0.2, 
                                               messages= messages)
