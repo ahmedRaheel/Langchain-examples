@@ -12,6 +12,9 @@ print("=" * 40)
 print("AI assistant — type quit or exit to stop")
 print("=" * 40)
 
+history =  [
+    {"role": "system", "content": "You are a helpful assistant."}
+]
 while True:
     user_input = input("You: ").strip()
 
@@ -21,14 +24,22 @@ while True:
 
     if not user_input:
         continue
+    history.append({
+        "role": "user",
+        "content": user_input,
+    })
 
     response = client.chat.completions.create(
         model=OLLAMA_MODEL,
-        messages=[
-            {"role": "user", "content": user_input}
-        ],
+        messages= history,
         temperature=0.2,
     )
+    reply = response.choices[0].message.content or ""
+    history.append({
+        "role": "assistant",
+        "content": reply,
+    })
 
     print("Assistant:")
-    print(response.choices[0].message.content or "")
+    print(reply)
+    
