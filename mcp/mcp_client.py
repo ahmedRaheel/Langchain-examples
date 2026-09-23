@@ -42,8 +42,8 @@ async def discover_tools(client):
 
 
 async def execute_tool(
-    client,
-    tool_name,
+    client: Client,
+    tool_name : str,
     arguments=None
 ):
 

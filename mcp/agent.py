@@ -56,6 +56,28 @@ def planner(user_request, tools):
 
     return tool_name.strip()
 
+def generate_response(user_request, tool):
+    prompt = f"""
+      The user asked:
+      {user_request}
+      The tool suggested by planner 
+      {tool}
+      Respond directly to the user in a natural, conversational way.
+
+Use the tool result as the factual source.
+Transform raw tool output into a human-friendly answer.
+Do not simply copy raw values when a natural sentence would be better.
+Do not add information that is not needed to answer the request.
+Do not mention tools, internal processing, planning, or reasoning.
+Keep the response concise.
+       """
+    response = client.chat.completions.create(
+        model= OLLAMA_MODEL, 
+        messages= [{"role": "user", "content": prompt}]
+    )
+    reply = response.choices[0].message.content or ""
+    return reply
+
 async def main():
     mcp_client = await connect()
     tools = await discover_tools(mcp_client)
@@ -64,6 +86,12 @@ async def main():
     tool_name = planner(user_input, tools)
     print("Planner Selected:",
         tool_name)
+    print()
+    tool_result = await execute_tool(mcp_client, tool_name)
+    answer = generate_response(user_input, tool_result)
+
+    print("AI:\n")
+    print(answer)
 
    
 
