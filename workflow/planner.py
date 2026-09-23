@@ -1,5 +1,4 @@
 from openai import OpenAI
-
 OLLAMA_MODEL = "qwen2.5:0.5b"
 OLLAMA_BASE_URL = "http://localhost:11434/v1"
 
@@ -7,6 +6,7 @@ client = OpenAI(
     base_url=OLLAMA_BASE_URL,
     api_key="ollama",
 )
+
 
 def build_tool_descriptions(tools):
 
@@ -26,41 +26,84 @@ Description:
 
     return descriptions
 
+
 def planner(state, tools):
 
     tool_descriptions = build_tool_descriptions(tools)
 
     prompt = f"""
-You are an AI Planner.
+You are an AI planner.
 
-Your job is to decide ONLY the next action.
+Your job is to select the next unfinished task
+and the best tool to complete it.
 
 User Request:
+
 {state["user_request"]}
 
+Tasks:
+
+{state["tasks"]}
+
+Pending Tasks:
+
+{[
+    item["task"]
+    for item in state["tasks"]
+    if item["status"] == "pending"
+]}
+
 Completed Actions:
+
 {state["actions"]}
 
-Previous Observations:
+Observations:
+
 {state["observations"]}
 
+Intermediate Results:
+
+{state["results"]}
+
 Available Tools:
+
 {tool_descriptions}
 
 Rules:
 
-1. Choose only ONE next action.
-2. Never repeat an action that has already been completed.
-3. Use the observations to decide what is still required.
-4. If the user's request has been completely satisfied, return FINISH.
-5. Return ONLY the tool name or FINISH.
-6. Do not explain your answer.
+1. Select only ONE pending task.
 
-Next Action:
+2. The TASK must be copied EXACTLY from the
+   pending task list.
+
+3. Do not change the task wording.
+
+4. Do not select a completed task.
+
+5. Select the best available tool for that task.
+
+6. Use previous observations and results.
+
+7. If an action failed, reconsider the task.
+
+8. If there are no pending tasks,
+   return ONLY the word:
+
+FINISH
+
+9. If tasks are still pending, return exactly
+   two lines in this format:
+
+TASK: <exact pending task>
+TOOL: <tool_name>
+
+10. Do not explain anything.
+
+Next Decision:
 """
 
     response = client.chat.completions.create(
-        model= OLLAMA_MODEL,
+        model=OLLAMA_MODEL,
         messages=[
             {
                 "role": "system",
@@ -74,4 +117,3 @@ Next Action:
     )
 
     return response.choices[0].message.content.strip()
-

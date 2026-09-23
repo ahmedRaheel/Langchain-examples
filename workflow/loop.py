@@ -1,11 +1,57 @@
 from state import (
     create_state,
+    add_task,
     add_action,
     record_observation,
+    add_result,
+    complete_task,
+    all_tasks_completed,
     next_step,
     can_continue,
     finish
 )
+
+from task_planner import (
+    decompose_task
+)
+
+
+def parse_decision(decision):
+
+    task = None
+    tool = None
+
+    # Handle the normal two-line format
+    for line in decision.splitlines():
+
+        line = line.strip()
+
+        if line.startswith("TASK:"):
+
+            task = line[5:].strip()
+
+        elif line.startswith("TOOL:"):
+
+            tool = line[5:].strip()
+
+    # Handle the case where the LLM puts
+    # TASK and TOOL on the same line.
+    if task and "TOOL:" in task:
+
+        parts = task.split(
+            "TOOL:",
+            1
+        )
+
+        task = parts[0].strip()
+
+        if not tool:
+
+            tool = parts[1].strip()
+
+    return task, tool
+
+
 
 
 async def run_agent_loop(
@@ -17,45 +63,186 @@ async def run_agent_loop(
     client
 ):
 
-    state = create_state(user_request)
-# While can_continue: "This is the heart of our agent.“
+    state = create_state(
+        user_request
+    )
+
+    # --------------------------------
+    # Step 1: Decompose the goal
+    # --------------------------------
+
+    planned_tasks = decompose_task(
+        user_request
+    )
+
+    for task in planned_tasks:
+
+        add_task(
+            state,
+            task
+        )
+
+    print("\nTask Plan")
+    print("---------")
+
+    for item in state["tasks"]:
+
+        print(
+            "-",
+            item["task"]
+        )
+
+    # --------------------------------
+    # Step 2: Autonomous loop
+    # --------------------------------
 
     while can_continue(state):
-#The planner decides what to do next.
 
-        action = planner(state, tools)
+        # --------------------------------
+        # Check whether all tasks are done
+        # --------------------------------
 
-        print("Planner Selected:", action)
+        if all_tasks_completed(state):
 
-        if action == "FINISH":
+            print(
+                "\n--- Step "
+                f"{state['current_step'] + 1} ---"
+            )
 
-            answer = format_answer(state)
+            print(
+                "Planner Decision:"
+            )
 
-            finish(state, answer)
+            print("TASK: FINISH")
+
+            answer = format_answer(
+                state
+            )
+
+            finish(
+                state,
+                answer
+            )
 
             break
-# We execute that action.
+
+        print(
+            f"\n--- Step "
+            f"{state['current_step'] + 1} ---"
+        )
+
+        # --------------------------------
+        # Ask planner for next task
+        # --------------------------------
+
+        decision = planner(
+            state,
+            tools
+        )
+
+        print(
+            "Planner Decision:"
+        )
+
+        print(decision)
+
+        # --------------------------------
+        # Check FINISH
+        # --------------------------------
+
+        if decision.strip().upper() == "FINISH":
+
+            answer = format_answer(
+                state
+            )
+
+            finish(
+                state,
+                answer
+            )
+
+            break
+
+        # --------------------------------
+        # Extract task and tool
+        # --------------------------------
+
+        task, tool = parse_decision(
+            decision
+        )
+
+        if not task or not tool:
+
+            add_result(
+                state,
+                "Invalid planner decision."
+            )
+
+            next_step(state)
+
+            continue
+
+        state["current_task"] = task
+
+        # --------------------------------
+        # Execute tool
+        # --------------------------------
 
         observation = await execute_action(
-            action,
+            tool,
             state,
             client
         )
-# We add that action in state
+
+        print(
+            "Observation:",
+            observation
+        )
+
+        # --------------------------------
+        # Update state
+        # --------------------------------
 
         add_action(
             state,
-            action
+            tool
         )
-#    	We remember what happened.
 
         record_observation(
             state,
-            action,
+            tool,
             observation
         )
-#	We move to the next iteration.
-     
+
+        add_result(
+            state,
+            observation
+        )
+
+        # --------------------------------
+        # Mark task complete
+        # --------------------------------
+
+        if not observation.lower().startswith(
+            "error"
+        ):
+
+            complete_task(
+                state,
+                task
+            )
+
+            print(
+                "completed"
+            )
+
+        else:
+
+            add_result(
+                state,
+                "The previous action failed. "
+                "The planner must reconsider."
+            )
 
         next_step(state)
 

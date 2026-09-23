@@ -1,4 +1,3 @@
-from openai import OpenAI
 import asyncio
 
 from mcp_client import (
@@ -10,67 +9,26 @@ from mcp_client import (
 from planner import planner
 from executor import execute_action
 from loop import run_agent_loop
-
-
-
-OLLAMA_MODEL = "qwen2.5:0.5b"
-OLLAMA_BASE_URL = "http://localhost:11434/v1"
-
-client = OpenAI(
-    base_url=OLLAMA_BASE_URL,
-    api_key="ollama",
-)
-
-
-def format_answer(state):
-
-    prompt = f"""
-The user asked:
-
-{state["user_request"]}
-
-Actions performed:
-
-{state["actions"]}
-
-Observations:
-
-{state["observations"]}
-
-Answer the user naturally.
-
-Do not mention internal planning.
-Do not mention state.
-Do not mention tools.
-"""
-
-    response = client.chat.completions.create(
-        model= OLLAMA_MODEL,
-        messages=[
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ]
-    )
-
-    return response.choices[0].message.content.strip()
+from answer import format_answer
 
 
 async def main():
 
-    mcp_client = await connect()
+    client = await connect()
 
-    tools = await discover_tools(mcp_client)
+    tools = await discover_tools(
+        client
+    )
 
-    print()
-    print("Available Tools")
+    print("\nAvailable Tools")
     print("----------------")
 
     for tool in tools:
         print(tool.name)
 
-    user_request = input("\nUser : ")
+    user_request = input(
+        "\nUser : "
+    )
 
     state = await run_agent_loop(
         user_request,
@@ -78,16 +36,21 @@ async def main():
         execute_action,
         format_answer,
         tools,
-        mcp_client
+        client
     )
 
-    print()
-    print("Final Answer:")
-    print(state["final_answer"])
+    print("\nFinal Answer")
+    print("------------")
 
-    await disconnect(mcp_client)
+    print(
+        state["final_answer"]
+    )
+
+    await disconnect(client)
 
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+
 
