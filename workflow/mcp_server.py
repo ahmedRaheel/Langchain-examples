@@ -1,4 +1,7 @@
 from datetime import datetime
+import secrets
+import string
+import random
 
 from fastmcp import FastMCP
 
@@ -15,8 +18,6 @@ def current_time():
     )
 
 
-import random
-
 @mcp.tool()
 
 def roll_dice():
@@ -25,8 +26,7 @@ def roll_dice():
 
     return random.randint(1,6)
 
-import secrets
-import string
+
 
 @mcp.tool()
 
