@@ -1,10 +1,21 @@
-from mcp_client import  disconnect, connect, discover_tools
-from graph import build_graph
 import asyncio
 
-async def  main():
+from mcp_client import (
+    connect,
+    disconnect,
+    discover_tools
+)
+
+from graph import build_graph
+
+
+async def main():
+
     client = await connect()
-    tools = await discover_tools(client)
+
+    tools = await discover_tools(
+        client
+    )
 
     print("\nAvailable Tools")
     print("----------------")
@@ -12,8 +23,14 @@ async def  main():
     for tool in tools:
         print(tool.name)
 
-    graph = build_graph(tools)
-    user_request = input("\nUser : ")
+    graph = build_graph(
+        tools,
+        client
+    )
+
+    user_request = input(
+        "\nUser : "
+    )
 
     initial_state = {
         "user_request": user_request,
@@ -21,10 +38,12 @@ async def  main():
         "max_steps": 5,
         "actions": [],
         "observations": [],
+        "action": "",
         "finished": False,
         "final_answer": ""
     }
-    result = graph.invoke(
+
+    result = await graph.ainvoke(
         initial_state
     )
 
@@ -35,6 +54,7 @@ async def  main():
     await disconnect(client)
 
 
-
 if __name__ == "__main__":
     asyncio.run(main())
+
+
